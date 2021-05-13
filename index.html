@@ -21,8 +21,55 @@
 <body>
     <h1>Chat Room</h1>
     <ul id="messages"></ul>
+    <ul id="notification"></ul>
     <form id="form" action="">
       <input id="input" autocomplete="off" /><button>Send</button>
     </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();  
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+
+        // Setting alert for new joined user
+        const name = prompt('Your Username')
+        var item = document.createElement('li');
+        item.textContent = `You Joined!`;
+        messages.appendChild(item);
+
+        //Boradcasting user name
+        socket.emit('new user', name)
+
+        //Sending input field data to server through socket event chat message
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', input.value);
+                
+                var item = document.createElement('li');
+                item.textContent = `You : ${input.value}`;
+                messages.appendChild(item);
+                window.scrollTo(0, document.body.scrollHeight);
+                input.value = '';
+            }
+        });
+
+        // Capturing the server side socket event chat message and appending it to div as a list item
+        socket.on('chat message', function(msg) {
+            var item = document.createElement('li');
+            item.textContent = `${msg.name} : ${msg.msg}`;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        // Boradcasting new joined user to others
+        socket.on('broadcast',function(data) {
+            var item = document.createElement('li');
+            item.textContent = data.description;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+      });
+    </script>
 </body>
+
 </html>
